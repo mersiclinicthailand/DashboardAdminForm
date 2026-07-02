@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mersi Clinic — Dashboard ตรวจสาขา</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=IBM+Plex+Sans+Thai:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --green-900:#2C3E29; --green:#3D5238; --green-600:#4A6344;
+  --sage:#7B9E7E; --sage-100:#EAF0EA;
+  --gold:#C8A84B; --gold-300:#E3CE8F; --gold-100:#F6EED9;
+  --cream:#FAF7F2; --card:#FFFFFF; --ink:#26302B; --muted:#8A9388; --line:#E7E1D6;
+  --red:#C0392B; --amber:#D97706;
+  --shadow:0 14px 40px rgba(61,82,56,.08),0 2px 6px rgba(61,82,56,.05);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'IBM Plex Sans Thai','Prompt',sans-serif;color:var(--ink);font-size:14px;line-height:1.6;
+  background:radial-gradient(1200px 500px at 90% -10%,rgba(200,168,75,.10),transparent 60%),
+             radial-gradient(900px 500px at -10% 0%,rgba(123,158,126,.12),transparent 55%),var(--cream);min-height:100vh}
+h1,h2,h3,.f-prompt{font-family:'Prompt',sans-serif}
+
+.topbar{position:sticky;top:0;z-index:60;background:rgba(250,247,242,.88);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1240px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:12px 22px;gap:14px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px}
+.brand-mark{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--green),var(--green-600));display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Prompt';font-weight:600;box-shadow:0 4px 12px rgba(61,82,56,.28)}
+.brand-name{font-family:'Prompt';font-weight:600;font-size:15px;letter-spacing:.14em;color:var(--green)}
+.brand-sub{font-size:10.5px;color:var(--gold);letter-spacing:.3em;font-weight:500}
+.topbar .right{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.updated{font-size:11.5px;color:var(--muted)}
+.iconbtn{height:38px;padding:0 16px;border-radius:12px;border:1px solid var(--line);background:#fff;cursor:pointer;color:var(--green);
+  display:inline-flex;align-items:center;gap:7px;transition:.2s;font:inherit;font-size:13px;font-weight:500}
+.iconbtn:hover{border-color:var(--gold);box-shadow:0 4px 14px rgba(200,168,75,.25)}
+.iconbtn.primary{background:linear-gradient(135deg,var(--green),var(--green-600));color:#fff;border:none;box-shadow:0 6px 16px rgba(61,82,56,.3)}
+
+.wrap{max-width:1240px;margin:0 auto;padding:26px 22px 70px}
+.pagehead{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.pagehead h1{font-size:24px;font-weight:600;color:var(--green-900)}
+.pagehead .eyebrow{font-size:10.5px;letter-spacing:.28em;color:var(--gold);font-weight:600;text-transform:uppercase}
+.filters{display:flex;gap:9px;flex-wrap:wrap}
+.sel{padding:9px 34px 9px 14px;border:1.5px solid var(--line);border-radius:12px;background:#fff;font:inherit;font-size:13px;color:var(--ink);outline:none;cursor:pointer;appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='11' viewBox='0 0 24 24' fill='none' stroke='%233D5238' stroke-width='2.4'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;transition:.2s}
+.sel:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(61,82,56,.09)}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:22px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),transparent)}
+.kpi .lab{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:7px}
+.kpi .val{font-family:'Prompt';font-size:27px;font-weight:600;color:var(--green);margin-top:4px}
+.kpi .sub{font-size:11px;color:#B4AD9E}
+.kpi.alert .val{color:var(--red)}
+.kpi.gold .val{color:#A8862F}
+
+.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:16px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px 22px;min-width:0}
+.panel h3{font-size:14.5px;font-weight:600;color:var(--green-900);margin-bottom:2px;display:flex;align-items:center;gap:8px}
+.panel h3 .dot{width:7px;height:7px;border-radius:50%;background:var(--gold);flex:0 0 auto}
+.panel .sub{font-size:11.5px;color:var(--muted);margin-bottom:12px}
+.chartbox{position:relative;height:290px}
+.chartbox.tall{height:330px}
+
+/* marketing needs */
+.needs{display:flex;flex-direction:column;gap:9px;max-height:330px;overflow:auto;padding-right:4px}
+.need{background:#FCFAF6;border:1px solid var(--line);border-radius:13px;padding:10px 14px;font-size:12.5px;display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
+.need .meta{font-size:11px;color:var(--muted);margin-top:2px}
+.badge{font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:99px;white-space:nowrap;font-family:'Prompt'}
+.badge.h{background:#FBEAE7;color:var(--red)}.badge.m{background:#FCF1E0;color:var(--amber)}.badge.l{background:var(--sage-100);color:var(--green)}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-family:'Prompt';font-weight:600;font-size:11.5px;color:var(--muted);text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);letter-spacing:.04em;white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid #F1ECE2;vertical-align:middle}
+tbody tr{cursor:pointer;transition:.15s}
+tbody tr:hover{background:#FBF8F1}
+.st{font-size:11.5px;font-weight:600;padding:4px 12px;border-radius:99px;font-family:'Prompt';white-space:nowrap}
+.st.good{background:var(--sage-100);color:var(--green)}
+.st.warn{background:#FCF1E0;color:var(--amber)}
+.st.bad{background:#FBEAE7;color:var(--red)}
+.st.na{background:#F0EDE6;color:var(--muted)}
+.scorepill{font-family:'Prompt';font-weight:600;color:var(--green)}
+.tablewrap{overflow-x:auto}
+
+/* modal */
+.overlay{position:fixed;inset:0;background:rgba(38,48,43,.55);backdrop-filter:blur(6px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:26px 16px;overflow:auto}
+.overlay.show{display:flex}
+.modal{background:#fff;border-radius:22px;max-width:760px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,.3);animation:rise .3s ease;margin:auto}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.modal-head{padding:22px 26px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;position:sticky;top:0;background:#fff;border-radius:22px 22px 0 0}
+.modal-head h3{font-size:17px;color:var(--green-900)}
+.modal-head .meta{font-size:12px;color:var(--muted);margin-top:2px}
+.modal-body{padding:20px 26px 26px;max-height:70vh;overflow:auto}
+.xbtn{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;cursor:pointer;font-size:15px;color:var(--muted);flex:0 0 auto}
+.dsec{margin-bottom:18px}
+.dsec h4{font-family:'Prompt';font-size:12.5px;font-weight:600;color:var(--gold);letter-spacing:.08em;margin-bottom:8px;text-transform:uppercase}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px 18px;font-size:13px}
+@media(max-width:600px){.dgrid{grid-template-columns:1fr}}
+.dgrid .k{color:var(--muted);font-size:12px}
+.pre{background:#FCFAF6;border:1px solid var(--line);border-radius:13px;padding:12px 15px;font-size:12.5px;white-space:pre-wrap;color:#4A554D}
+.sumbox{background:#243020;color:#E9EFE7;border-radius:16px;padding:18px 20px;font-size:12.5px;white-space:pre-wrap;line-height:1.75;border:1px solid #37452F}
+.copybtn{background:var(--gold);color:#fff;border:none;border-radius:99px;padding:8px 18px;font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Prompt';margin-top:10px}
+
+/* empty / setup */
+.empty{background:var(--card);border:1.5px dashed var(--gold-300);border-radius:22px;padding:60px 30px;text-align:center;box-shadow:var(--shadow)}
+.empty .ic{font-size:44px;margin-bottom:12px}
+.empty h2{color:var(--green-900);font-size:19px;margin-bottom:8px}
+.empty p{color:var(--muted);font-size:13.5px;max-width:480px;margin:0 auto 18px}
+.in{width:100%;max-width:460px;padding:12px 15px;border:1.5px solid var(--line);border-radius:13px;background:#FFFDF9;font:inherit;font-size:13.5px;outline:none;margin:0 auto}
+.in:focus{border-color:var(--green);box-shadow:0 0 0 4px rgba(61,82,56,.09)}
+
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--green-900);color:#fff;padding:12px 24px;border-radius:99px;font-size:13.5px;z-index:120;transition:.35s;opacity:0;box-shadow:0 12px 30px rgba(0,0,0,.25)}
+#toast.show{transform:translateX(-50%);opacity:1}
+#toast.err{background:var(--red)}
+.spin{display:inline-block;animation:rot 1s linear infinite}
+@keyframes rot{to{transform:rotate(360deg)}}
+.footer-note{text-align:center;color:#B4AD9E;font-size:11.5px;padding-bottom:30px;letter-spacing:.06em}
+
+/* ============ RESPONSIVE ============ */
+/* Tablet แนวนอน / จอกลาง */
+@media(max-width:1180px){
+  .grid3{grid-template-columns:1fr 1fr}
+}
+/* Tablet แนวตั้ง */
+@media(max-width:980px){
+  .grid2{grid-template-columns:1fr}
+  .chartbox.tall{height:300px}
+  .wrap{padding:22px 18px 60px}
+}
+/* Mobile */
+@media(max-width:740px){
+  .grid3{grid-template-columns:1fr}
+  .wrap{padding:16px 12px 46px}
+  .pagehead{margin-bottom:14px}
+  .pagehead h1{font-size:20px}
+  .filters{width:100%}
+  .filters .sel{flex:1;min-width:0;font-size:16px;padding:10px 30px 10px 12px} /* 16px กัน iOS ซูม */
+  .kpis{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+  .kpi{padding:13px 15px;border-radius:15px}
+  .kpi .val{font-size:20px}
+  .kpi .sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .grid2,.grid3{gap:12px;margin-bottom:12px}
+  .panel{padding:15px 14px;border-radius:15px}
+  .chartbox{height:230px}
+  .chartbox.tall{height:260px}
+  .topbar-in{padding:10px 12px;gap:8px}
+  .updated{display:none}
+  .iconbtn{height:36px;padding:0 13px;font-size:12.5px}
+  table{min-width:520px}                 /* ตารางเลื่อนซ้าย-ขวาได้ */
+  th,td{padding:9px 10px}
+  .overlay{padding:12px 8px}
+  .modal{border-radius:18px}
+  .modal-head{padding:16px 16px;border-radius:18px 18px 0 0}
+  .modal-body{padding:14px 16px 20px;max-height:74vh}
+  .needs{max-height:280px}
+  .sumbox{padding:14px 13px;font-size:12px}
+}
+@media(max-width:390px){
+  .kpis{grid-template-columns:1fr 1fr}
+  .kpi .val{font-size:18px}
+  .brand-sub{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar"><div class="topbar-in">
+  <div class="brand">
+    <div class="brand-mark">M</div>
+    <div><div class="brand-name">MERSI CLINIC</div><div class="brand-sub">AUDIT DASHBOARD</div></div>
+  </div>
+  <div class="right">
+    <span class="updated" id="updated"></span>
+    <button class="iconbtn primary" id="syncBtn" onclick="loadData(true)">⟳ Sync</button>
+    <button class="iconbtn" onclick="openSettings()">⚙</button>
+  </div>
+</div></header>
+
+<div class="wrap">
+  <div class="pagehead">
+    <div>
+      <div class="eyebrow">Branch Audit Intelligence</div>
+      <h1>Dashboard ตรวจสาขา</h1>
+    </div>
+    <div class="filters">
+      <select class="sel" id="fMonth" onchange="applyFilters()"><option value="">ทุกเดือน</option></select>
+      <select class="sel" id="fBranch" onchange="applyFilters()"><option value="">ทุกสาขา</option></select>
+      <select class="sel" id="fInspector" onchange="applyFilters()"><option value="">ผู้ตรวจทุกคน</option></select>
+    </div>
+  </div>
+  <div id="content"></div>
+</div>
+<div class="footer-note">MERSI CLINIC · BRANCH AUDIT SYSTEM · 2026</div>
+
+<!-- settings -->
+<div class="overlay" id="setModal"><div class="modal" style="max-width:520px"><div class="modal-head"><div><h3>⚙ ตั้งค่าการเชื่อมต่อ</h3><div class="meta">ระบบตั้งค่า URL ไว้ให้แล้ว — แก้ไขเฉพาะกรณีย้ายระบบ / Deploy ใหม่ (URL เดียวกับหน้าฟอร์ม)</div></div><button class="xbtn" onclick="closeSettings()">✕</button></div>
+<div class="modal-body">
+  <input class="in" id="gsUrl" style="max-width:100%" placeholder="https://script.google.com/macros/s/…/exec">
+  <div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end">
+    <button class="iconbtn" onclick="closeSettings()">ปิด</button>
+    <button class="iconbtn primary" onclick="saveSettings()">บันทึกและโหลดข้อมูล</button>
+  </div>
+</div></div></div>
+
+<!-- detail -->
+<div class="overlay" id="dModal"><div class="modal">
+  <div class="modal-head"><div><h3 id="dTitle"></h3><div class="meta" id="dMeta"></div></div><button class="xbtn" onclick="document.getElementById('dModal').classList.remove('show')">✕</button></div>
+  <div class="modal-body" id="dBody"></div>
+</div></div>
+
+<div id="toast"></div>
+
+<script>
+var CFG_KEY='mersi_audit_cfg_v1', CACHE_KEY='mersi_audit_cache_v1', TTL=10*60*1000;
+/* Apps Script Web App URL (ฝังไว้แล้ว — เปลี่ยนได้ที่ปุ่ม ⚙ หากย้ายระบบ) */
+var DEFAULT_URL='https://script.google.com/macros/s/AKfycbweOjWwUj-987i9JmnWVSBRYzhEBM9kYtu-elqxjsv_yFGs0nRyvAjjEUZOf-Ph6m4NIw/exec';
+var ROWS=[], FILTERED=[], CHARTS={};
+var GREEN='#3D5238',SAGE='#7B9E7E',GOLD='#C8A84B',RED='#C0392B',AMBER='#D97706',CREAM='#EDE7DB',MUTED='#8A9388';
+Chart.defaults.font.family="'IBM Plex Sans Thai','Prompt',sans-serif";
+Chart.defaults.color=MUTED;
+Chart.defaults.plugins.legend.labels.usePointStyle=true;
+Chart.defaults.plugins.legend.labels.boxWidth=8;
+
+var REJ_LABELS={rej_price:'ราคาแพง',rej_think:'ขอคิดก่อน',rej_pain:'กลัวเจ็บ',rej_result:'ไม่มั่นใจผลลัพธ์',rej_compare:'เทียบราคาคู่แข่ง',rej_queue:'คิวไม่ตรง/หมอเต็ม',rej_travel:'ไม่สะดวกเดินทาง',rej_promo:'โปรไม่ตรงต้องการ'};
+var OP_LABELS={op_1:'ลูกค้ารอนาน',op_2:'คิวหมอเต็ม',op_3:'ห้องบริการไม่พอ',op_4:'เครื่องมือไม่พร้อม',op_5:'พนักงานไม่พอ',op_6:'พนักงานไม่เข้าใจโปร',op_7:'ส่งต่อข้อมูลไม่ครบ',op_8:'ลูกค้า Complaint',op_9:'ไม่เก็บรีวิว'};
+var GRADE_LABELS={grade_flow:'Online-to-Branch Flow',grade_promo:'ความเข้าใจโปร',grade_close:'การปิดการขาย',grade_line:'LINE OA / CRM',grade_local:'Local Promotion',grade_op:'Operation',grade_chat:'Chat Quality'};
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function toast(m,e){var t=document.getElementById('toast');t.textContent=m;t.className=e?'err show':'show';clearTimeout(t._h);t._h=setTimeout(function(){t.className=e?'err':'';},3000);}
+function num(x){var n=parseFloat(x);return isNaN(n)?0:n;}
+function avg(a){return a.length?a.reduce(function(x,y){return x+y;},0)/a.length:0;}
+function thDate(d){if(!d)return '—';var p=String(d).split('-');if(p.length<3)return d;var m=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return parseInt(p[2],10)+' '+m[parseInt(p[1],10)-1]+' '+(parseInt(p[0],10)+543);}
+function thMonth(m){if(!m)return m;var p=m.split('-');var ms=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];return ms[parseInt(p[1],10)-1]+' '+(parseInt(p[0],10)+543);}
+function stClass(s){return s==='ดี'?'good':(s==='ต้องปรับ'?'warn':(s==='ต้องแก้ด่วน'?'bad':'na'));}
+function copyText(txt){
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(function(){toast('คัดลอกแล้ว ✓');});}
+  else{var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);toast('คัดลอกแล้ว ✓');}
+}
+
+/* ---------- settings ---------- */
+function cfg(){try{return JSON.parse(localStorage.getItem(CFG_KEY)||'{}');}catch(e){return {};}}
+function getUrl(){return cfg().url||DEFAULT_URL;}
+function openSettings(){document.getElementById('gsUrl').value=getUrl();document.getElementById('setModal').classList.add('show');}
+function closeSettings(){document.getElementById('setModal').classList.remove('show');}
+function saveSettings(){
+  var url=document.getElementById('gsUrl').value.trim();
+  if(url&&!/^https:\/\/script\.google(usercontent)?\.com\//.test(url)){toast('URL ไม่ถูกต้อง — ต้องเป็นลิงก์ script.google.com',true);return;}
+  localStorage.setItem(CFG_KEY,JSON.stringify({url:url}));closeSettings();
+  loadData(true); /* ถ้าเว้นว่าง จะกลับไปใช้ URL ที่ฝังไว้ในระบบ */
+}
+
+/* ---------- data ---------- */
+function loadData(force){
+  var url=getUrl();
+  if(!url){renderEmpty();return;}
+  if(!force){
+    try{var cache=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');
+      if(cache&&Date.now()-cache.ts<TTL){ROWS=cache.rows;afterLoad(cache.updatedAt,true);return;}
+    }catch(e){}
+  }
+  var btn=document.getElementById('syncBtn');btn.innerHTML='<span class="spin">⟳</span> กำลังโหลด…';btn.disabled=true;
+  fetch(url).then(function(r){return r.json();}).then(function(res){
+    if(!res.ok)throw new Error(res.error||'โหลดข้อมูลไม่สำเร็จ');
+    ROWS=res.rows||[];
+    localStorage.setItem(CACHE_KEY,JSON.stringify({ts:Date.now(),rows:ROWS,updatedAt:res.updatedAt}));
+    afterLoad(res.updatedAt,false);
+  }).catch(function(err){
+    toast('โหลดข้อมูลไม่สำเร็จ: '+err.message,true);
+    if(!ROWS.length)renderEmpty(true);
+  }).finally(function(){btn.innerHTML='⟳ Sync';btn.disabled=false;});
+}
+function afterLoad(updatedAt,fromCache){
+  document.getElementById('updated').textContent='อัปเดต: '+new Date(updatedAt||Date.now()).toLocaleString('th-TH',{dateStyle:'short',timeStyle:'short'})+(fromCache?' (cache)':'');
+  buildFilters();applyFilters();
+}
+function buildFilters(){
+  var months={},branches={},inspectors={};
+  ROWS.forEach(function(r){
+    var m=String(r.visit_date||'').slice(0,7);if(m)months[m]=1;
+    if(r.branch)branches[r.branch]=1;
+    if(r.inspector)inspectors[r.inspector]=1;
+  });
+  fillSel('fMonth',Object.keys(months).sort().reverse(),thMonth,'ทุกเดือน');
+  fillSel('fBranch',Object.keys(branches).sort(),null,'ทุกสาขา');
+  fillSel('fInspector',Object.keys(inspectors).sort(),null,'ผู้ตรวจทุกคน');
+}
+function fillSel(id,arr,fmt,allLabel){
+  var el=document.getElementById(id),cur=el.value;
+  el.innerHTML='<option value="">'+allLabel+'</option>'+arr.map(function(x){return '<option value="'+esc(x)+'">'+esc(fmt?fmt(x):x)+'</option>';}).join('');
+  el.value=cur;
+}
+function applyFilters(){
+  var m=document.getElementById('fMonth').value,b=document.getElementById('fBranch').value,ins=document.getElementById('fInspector').value;
+  FILTERED=ROWS.filter(function(r){
+    if(m&&String(r.visit_date||'').slice(0,7)!==m)return false;
+    if(b&&r.branch!==b)return false;
+    if(ins&&r.inspector!==ins)return false;
+    return true;
+  });
+  renderDashboard();
+}
+
+/* ---------- render ---------- */
+function renderEmpty(hasUrl){
+  document.getElementById('content').innerHTML=
+    '<div class="empty"><div class="ic">🌿</div><h2>'+(hasUrl?'ยังโหลดข้อมูลไม่ได้':'ยังไม่ได้เชื่อมต่อ Google Sheets')+'</h2>'
+    +'<p>'+(hasUrl?'ตรวจสอบว่า Apps Script deploy แบบ Anyone และ URL ลงท้าย /exec แล้วกด Sync อีกครั้ง':'วาง URL ของ Apps Script Web App เพื่อดึงข้อมูลการตรวจสาขาจาก Google Sheets (ดูคู่มือติดตั้ง)')+'</p>'
+    +'<button class="iconbtn primary" onclick="openSettings()">⚙ ตั้งค่าการเชื่อมต่อ</button></div>';
+}
+function destroyCharts(){Object.keys(CHARTS).forEach(function(k){try{CHARTS[k].destroy();}catch(e){}});CHARTS={};}
+
+function renderDashboard(){
+  destroyCharts();
+  var R=FILTERED;
+  if(!ROWS.length){document.getElementById('content').innerHTML='<div class="empty"><div class="ic">📭</div><h2>ยังไม่มีข้อมูลการตรวจ</h2><p>เมื่อ Admin Manager / Senior Admin ส่งแบบฟอร์มตรวจสาขาเข้ามา ข้อมูลจะแสดงที่นี่อัตโนมัติ</p></div>';return;}
+  if(!R.length){document.getElementById('content').innerHTML='<div class="empty"><div class="ic">🔍</div><h2>ไม่พบข้อมูลตามเงื่อนไข</h2><p>ลองเปลี่ยนตัวกรองเดือน / สาขา / ผู้ตรวจ</p></div>';return;}
+
+  /* aggregates */
+  var overallArr=R.map(function(r){return num(r.score_overall);}).filter(Boolean);
+  var latestByBranch={};
+  R.forEach(function(r){
+    var b=r.branch||'?';
+    if(!latestByBranch[b]||String(r.visit_date)>=String(latestByBranch[b].visit_date))latestByBranch[b]=r;
+  });
+  var urgent=Object.keys(latestByBranch).filter(function(b){return latestByBranch[b].overall_status==='ต้องแก้ด่วน';});
+  var hotItems=R.reduce(function(s,r){return s+num(r.leaks_high)+num(r.mkt_support_high);},0);
+  var actions=R.reduce(function(s,r){return s+num(r.action_count);},0);
+
+  var html=
+   '<div class="kpis">'
+   +kpi('🗂','การตรวจ (ตามตัวกรอง)',R.length+' ครั้ง','จากทั้งหมด '+ROWS.length+' ครั้ง')
+   +kpi('⭐','คะแนนเฉลี่ยรวม',overallArr.length?avg(overallArr).toFixed(2):'—','เต็ม 5.00','gold')
+   +kpi('🚨','สาขาต้องแก้ด่วน',urgent.length+' สาขา',urgent.length?urgent.join(', '):'ไม่มี — ดีมาก',urgent.length?'alert':'')
+   +kpi('🔥','จุดรั่ว/งานเร่งด่วนสูง',hotItems+' รายการ','จุดรั่ว + Marketing support [สูง]',hotItems?'alert':'')
+   +kpi('✅','Action Plan',actions+' ข้อ','ที่ระบุไว้ในรายงาน')
+   +'</div>'
+   +'<div class="grid2">'
+   +'<div class="panel"><h3><span class="dot"></span>คะแนนรวมเฉลี่ยรายสาขา</h3><div class="sub">เรียงจากคะแนนน้อย → มาก (สาขาซ้ายสุดต้องดูแลก่อน)</div><div class="chartbox tall"><canvas id="chBranch"></canvas></div></div>'
+   +'<div class="panel"><h3><span class="dot"></span>คะแนนแยกหมวด</h3><div class="sub">Flow / ปิดการขาย / Chat — เทียบค่าเฉลี่ยทุกสาขา</div><div class="chartbox tall"><canvas id="chRadar"></canvas></div></div>'
+   +'</div>'
+   +'<div class="grid3">'
+   +'<div class="panel"><h3><span class="dot"></span>แนวโน้มรายเดือน</h3><div class="sub">จำนวนครั้งที่ตรวจ + คะแนนเฉลี่ย</div><div class="chartbox"><canvas id="chTrend"></canvas></div></div>'
+   +'<div class="panel"><h3><span class="dot"></span>ภาพรวมสถานะสาขา</h3><div class="sub">จากส่วนสรุปของผู้ตรวจ</div><div class="chartbox"><canvas id="chStatus"></canvas></div></div>'
+   +'<div class="panel"><h3><span class="dot"></span>หมวดที่ต้องแก้ด่วน</h3><div class="sub">จำนวนครั้งที่หมวดถูกประเมิน "ต้องแก้ด่วน"</div><div class="chartbox"><canvas id="chGrade"></canvas></div></div>'
+   +'</div>'
+   +'<div class="grid2">'
+   +'<div class="panel"><h3><span class="dot"></span>เหตุผลที่ลูกค้าไม่ซื้อ</h3><div class="sub">ถ่วงน้ำหนัก: พบมาก = 2, ปานกลาง = 1</div><div class="chartbox"><canvas id="chRej"></canvas></div></div>'
+   +'<div class="panel"><h3><span class="dot"></span>ปัญหา Operation ที่พบบ่อย</h3><div class="sub">จำนวนครั้งที่ตอบ "ใช่" (พบปัญหา)</div><div class="chartbox"><canvas id="chOp"></canvas></div></div>'
+   +'</div>'
+   +'<div class="grid2">'
+   +'<div class="panel"><h3><span class="dot"></span>รายการตรวจล่าสุด</h3><div class="sub">คลิกแถวเพื่อดูรายละเอียด + สรุปส่งไลน์</div><div class="tablewrap"><table><thead><tr><th>วันที่</th><th>สาขา</th><th>ผู้ตรวจ</th><th>คะแนน</th><th>สถานะ</th></tr></thead><tbody id="tbody"></tbody></table></div></div>'
+   +'<div class="panel"><h3><span class="dot"></span>สิ่งที่ Marketing ต้องสนับสนุน</h3><div class="sub">รวบรวมจากทุกรายงาน (ตามตัวกรอง)</div><div class="needs" id="needs"></div></div>'
+   +'</div>';
+  document.getElementById('content').innerHTML=html;
+
+  buildCharts(R,latestByBranch);
+  buildTable(R);
+  buildNeeds(R);
+}
+function kpi(ic,lab,val,sub,cls){return '<div class="kpi '+(cls||'')+'"><div class="lab">'+ic+' '+lab+'</div><div class="val">'+val+'</div><div class="sub">'+esc(sub)+'</div></div>';}
+
+function buildCharts(R,latestByBranch){
+  /* by branch */
+  var byBranch={};
+  R.forEach(function(r){var b=r.branch||'?';(byBranch[b]=byBranch[b]||[]).push(num(r.score_overall));});
+  var bEntries=Object.keys(byBranch).map(function(b){return [b,avg(byBranch[b].filter(Boolean))];}).sort(function(a,b){return a[1]-b[1];});
+  CHARTS.branch=new Chart(document.getElementById('chBranch'),{type:'bar',
+    data:{labels:bEntries.map(function(e){return e[0];}),datasets:[{data:bEntries.map(function(e){return +e[1].toFixed(2);}),
+      backgroundColor:bEntries.map(function(e){return e[1]>=4?GREEN:(e[1]>=3?GOLD:(e[1]>=2?AMBER:RED));}),borderRadius:8,maxBarThickness:30}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return ' '+c.parsed.y+' / 5';}}}},
+      scales:{y:{min:0,max:5,grid:{color:'#F1ECE2'}},x:{grid:{display:false},ticks:{font:{size:11}}}}}});
+
+  /* radar */
+  var fAll=avg(R.map(function(r){return num(r.flow_avg);}).filter(Boolean));
+  var cAll=avg(R.map(function(r){return num(r.close_avg);}).filter(Boolean));
+  var chAll=avg(R.map(function(r){return num(r.chat_avg);}).filter(Boolean));
+  var pAll=avg(R.map(function(r){return num(r.promo_yes_count)/8*5;}).filter(Boolean));
+  var lAll=avg(R.map(function(r){return num(r.line_yes_count)/8*5;}).filter(Boolean));
+  var oAll=avg(R.map(function(r){return (9-num(r.op_issue_count))/9*5;}));
+  CHARTS.radar=new Chart(document.getElementById('chRadar'),{type:'radar',
+    data:{labels:['Flow','ปิดการขาย','Chat','เข้าใจโปร','LINE OA','Operation'],
+      datasets:[{label:'ค่าเฉลี่ย (ตามตัวกรอง)',data:[fAll,cAll,chAll,pAll,lAll,oAll].map(function(x){return +x.toFixed(2);}),
+        backgroundColor:'rgba(61,82,56,.14)',borderColor:GREEN,pointBackgroundColor:GOLD,pointRadius:4,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,scales:{r:{min:0,max:5,ticks:{stepSize:1,font:{size:10}},grid:{color:'#EDE7DB'},angleLines:{color:'#EDE7DB'},pointLabels:{font:{size:11.5,family:'Prompt'},color:'#4A554D'}}}}});
+
+  /* trend */
+  var byMonth={};
+  R.forEach(function(r){var m=String(r.visit_date||'').slice(0,7);if(!m)return;(byMonth[m]=byMonth[m]||{n:0,sc:[]});byMonth[m].n++;var s=num(r.score_overall);if(s)byMonth[m].sc.push(s);});
+  var months=Object.keys(byMonth).sort();
+  CHARTS.trend=new Chart(document.getElementById('chTrend'),{type:'bar',
+    data:{labels:months.map(thMonth),datasets:[
+      {type:'bar',label:'จำนวนตรวจ',data:months.map(function(m){return byMonth[m].n;}),backgroundColor:'rgba(200,168,75,.4)',borderRadius:7,yAxisID:'y',maxBarThickness:26},
+      {type:'line',label:'คะแนนเฉลี่ย',data:months.map(function(m){return +avg(byMonth[m].sc).toFixed(2);}),borderColor:GREEN,backgroundColor:GREEN,tension:.35,yAxisID:'y2',pointRadius:4,pointBackgroundColor:GOLD}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      scales:{y:{beginAtZero:true,grid:{color:'#F1ECE2'},ticks:{precision:0}},y2:{position:'right',min:0,max:5,grid:{display:false}},x:{grid:{display:false}}}}});
+
+  /* status doughnut */
+  var st={'ดี':0,'ต้องปรับ':0,'ต้องแก้ด่วน':0};
+  R.forEach(function(r){if(st[r.overall_status]!==undefined)st[r.overall_status]++;});
+  CHARTS.status=new Chart(document.getElementById('chStatus'),{type:'doughnut',
+    data:{labels:['ดี','ต้องปรับ','ต้องแก้ด่วน'],datasets:[{data:[st['ดี'],st['ต้องปรับ'],st['ต้องแก้ด่วน']],backgroundColor:[GREEN,AMBER,RED],borderWidth:3,borderColor:'#fff'}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'62%',plugins:{legend:{position:'bottom'}}}});
+
+  /* grade urgent */
+  var gKeys=Object.keys(GRADE_LABELS);
+  var gCounts=gKeys.map(function(k){return R.filter(function(r){return r[k]==='ต้องแก้ด่วน';}).length;});
+  CHARTS.grade=new Chart(document.getElementById('chGrade'),{type:'bar',
+    data:{labels:gKeys.map(function(k){return GRADE_LABELS[k];}),datasets:[{data:gCounts,backgroundColor:RED,borderRadius:7,maxBarThickness:20}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,ticks:{precision:0},grid:{color:'#F1ECE2'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+
+  /* rejections */
+  var rKeys=Object.keys(REJ_LABELS);
+  var rScores=rKeys.map(function(k){return R.reduce(function(s,r){return s+(r[k]==='มาก'?2:(r[k]==='ปานกลาง'?1:0));},0);});
+  var rPairs=rKeys.map(function(k,i){return [REJ_LABELS[k],rScores[i]];}).sort(function(a,b){return b[1]-a[1];});
+  CHARTS.rej=new Chart(document.getElementById('chRej'),{type:'bar',
+    data:{labels:rPairs.map(function(p){return p[0];}),datasets:[{data:rPairs.map(function(p){return p[1];}),backgroundColor:rPairs.map(function(p,i){return i<3?RED:GOLD;}),borderRadius:7,maxBarThickness:20}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,ticks:{precision:0},grid:{color:'#F1ECE2'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+
+  /* operations */
+  var oKeys=Object.keys(OP_LABELS);
+  var oPairs=oKeys.map(function(k){return [OP_LABELS[k],R.filter(function(r){return r[k]==='ใช่';}).length];}).sort(function(a,b){return b[1]-a[1];});
+  CHARTS.op=new Chart(document.getElementById('chOp'),{type:'bar',
+    data:{labels:oPairs.map(function(p){return p[0];}),datasets:[{data:oPairs.map(function(p){return p[1];}),backgroundColor:AMBER,borderRadius:7,maxBarThickness:20}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,ticks:{precision:0},grid:{color:'#F1ECE2'}},y:{grid:{display:false},ticks:{font:{size:11}}}}}});
+}
+
+function buildTable(R){
+  var sorted=R.slice().sort(function(a,b){return String(b.visit_date).localeCompare(String(a.visit_date));}).slice(0,30);
+  document.getElementById('tbody').innerHTML=sorted.map(function(r){
+    var gi=ROWS.indexOf(r);
+    return '<tr onclick="openDetail('+gi+')"><td style="white-space:nowrap">'+thDate(r.visit_date)+'</td><td style="font-weight:500">'+esc(r.branch)+'</td><td>'+esc(r.inspector)+'</td>'
+      +'<td><span class="scorepill">'+(num(r.score_overall)?num(r.score_overall).toFixed(2):'—')+'</span></td>'
+      +'<td><span class="st '+stClass(r.overall_status)+'">'+esc(r.overall_status||'—')+'</span></td></tr>';
+  }).join('');
+}
+function buildNeeds(R){
+  var items=[];
+  R.forEach(function(r){
+    String(r.mkt_support_text||'').split('\n').filter(Boolean).forEach(function(line){
+      var urg=/\[สูง\]/.test(line)?'สูง':(/\[กลาง\]/.test(line)?'กลาง':(/\[ต่ำ\]/.test(line)?'ต่ำ':''));
+      items.push({text:line.replace(/\s*\[(สูง|กลาง|ต่ำ)\]\s*$/,''),urg:urg,branch:r.branch,date:r.visit_date});
+    });
+  });
+  items.sort(function(a,b){var w={'สูง':0,'กลาง':1,'ต่ำ':2,'':3};return w[a.urg]-w[b.urg];});
+  document.getElementById('needs').innerHTML=items.length?items.map(function(it){
+    var cls=it.urg==='สูง'?'h':(it.urg==='กลาง'?'m':'l');
+    return '<div class="need"><div><div>'+esc(it.text)+'</div><div class="meta">'+esc(it.branch)+' · '+thDate(it.date)+'</div></div>'+(it.urg?'<span class="badge '+cls+'">'+it.urg+'</span>':'')+'</div>';
+  }).join(''):'<div style="color:var(--muted);font-size:13px;text-align:center;padding:30px 0">ยังไม่มีคำขอสนับสนุนจากสาขา</div>';
+}
+
+/* ---------- detail modal ---------- */
+function openDetail(i){
+  var r=ROWS[i];if(!r)return;
+  document.getElementById('dTitle').textContent='🌿 '+(r.branch||'—')+' — '+thDate(r.visit_date);
+  document.getElementById('dMeta').textContent='ผู้ตรวจ: '+(r.inspector||'—')+' · '+(r.inspect_type||'')+' · เวลา '+(r.time_start||'–')+' ถึง '+(r.time_end||'–');
+  var b='';
+  b+='<div class="dsec"><h4>คะแนน & สถานะ</h4><div class="dgrid">'
+    +kv('คะแนนรวม',(num(r.score_overall)?num(r.score_overall).toFixed(2)+' / 5':'—'))
+    +kv('ภาพรวมสาขา',r.overall_status)
+    +kv('Flow',r.flow_avg)+kv('ปิดการขาย',r.close_avg)+kv('Chat',r.chat_avg||'ไม่ประเมิน')
+    +kv('เข้าใจโปร',(r.promo_yes_count!==''?r.promo_yes_count+' / 8':'—'))
+    +kv('LINE OA ผ่านเกณฑ์',(r.line_yes_count!==''?r.line_yes_count+' / 8':'—'))
+    +kv('ปัญหา Operation',(r.op_issue_count!==''?r.op_issue_count+' / 9':'—'))
+    +'</div></div>';
+  b+='<div class="dsec"><h4>สถานะสาขา (ส่วนที่ 2)</h4><div class="dgrid">'
+    +kv('ยอดขาย',r.st_sales)+kv('Conversion',r.st_conversion)+kv('รับลูกค้า Online',r.st_online)
+    +kv('เข้าใจโปร',r.st_promo)+kv('LINE OA',r.st_lineoa)+kv('Service/Wait',r.st_service)+'</div></div>';
+  b+='<div class="dsec"><h4>Performance</h4><div class="dgrid">'
+    +kv('Lead',r.perf_lead)+kv('แชท',r.perf_chat)+kv('Booking',r.perf_booking)+kv('มาตามนัด',r.perf_showup)
+    +kv('ชำระเงิน',r.perf_payment)+kv('ยอด Online สะสม',fmtBaht(r.perf_online_sales))+kv('Avg Bill',fmtBaht(r.perf_avg_bill))
+    +kv('ขายดีสุด',r.perf_best_seller)+kv('ถามเยอะปิดยาก',r.perf_hard_close)+'</div></div>';
+  if(r.leaks_text)b+=pre('จุดรั่ว Online-to-Branch',r.leaks_text);
+  if(r.promo_brief_needed)b+=pre('โปรที่ต้อง Brief เพิ่ม',r.promo_brief_needed);
+  if(r.promo_marketing_help)b+=pre('โปร/หัตถการที่ต้องให้การตลาดช่วย',r.promo_marketing_help);
+  if(r.lost_reasons)b+=pre('เหตุผลที่ลูกค้าหลุด',r.lost_reasons);
+  if(r.op_solution)b+=pre('ข้อเสนอแก้ปัญหา Operation',r.op_solution);
+  if(r.coaching_text)b+=pre('Admin ที่ต้อง Coaching',r.coaching_text);
+  if(r.mkt_support_text)b+=pre('สิ่งที่ Marketing ต้องสนับสนุน',r.mkt_support_text);
+  if(r.branch_todo)b+=pre('สิ่งที่สาขาต้องดำเนินการ',r.branch_todo);
+  if(r.followup_todo)b+=pre('สิ่งที่ต้องติดตามต่อ',r.followup_todo);
+  if(r.action_plan_text)b+=pre('Action Plan',r.action_plan_text);
+  if(r.approval_needed)b+=pre('เรื่องที่ต้องขออนุมัติ',r.approval_needed);
+  if(r.line_summary){
+    b+='<div class="dsec"><h4>สรุปส่งไลน์กลุ่ม</h4><div class="sumbox">'+esc(r.line_summary)+'</div>'
+      +'<button class="copybtn" onclick="copyText(ROWS['+i+'].line_summary)">📋 คัดลอกสรุปส่งไลน์</button></div>';
+  }
+  document.getElementById('dBody').innerHTML=b;
+  document.getElementById('dModal').classList.add('show');
+}
+function kv(k,val){return '<div><div class="k">'+esc(k)+'</div><div style="font-weight:500">'+esc(val===''||val==null?'—':val)+'</div></div>';}
+function pre(title,txt){return '<div class="dsec"><h4>'+esc(title)+'</h4><div class="pre">'+esc(txt)+'</div></div>';}
+function fmtBaht(x){var n=num(x);return n?n.toLocaleString('th-TH')+' ฿':(x||'—');}
+
+/* close overlays on backdrop click */
+document.querySelectorAll('.overlay').forEach(function(ov){ov.addEventListener('click',function(e){if(e.target===ov)ov.classList.remove('show');});});
+
+/* init */
+(function(){
+  if(!getUrl()){renderEmpty();openSettings();}
+  else loadData(false);
+})();
+</script>
+</body>
+</html>
